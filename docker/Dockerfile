@@ -90,18 +90,29 @@ RUN apt update -qq &&\
  apt install -y -q --no-install-recommends r-base r-base-dev
 #
 #
-# More sym links
-RUN sudo ln -s /opt/anaconda3/pkgs/*/bin/* /bin; exit 0
-RUN sudo ln -s /opt/anaconda3/bin/* /bin; exit 0
-RUN sudo ln -s /opt/anaconda3/pkgs/*/lib/* /usr/lib; exit 0
+#Get nodejs upgraded to 12+
+RUN curl -fsSL https://deb.nodesource.com/setup_17.x | sudo -E bash -\
+  && apt-get update && apt-get install -y nodejs
 #
 #
 #Install R kernel for jupyter
 RUN R -e "install.packages('IRkernel')"
 RUN sudo ln -s /opt/anaconda3/bin/* /usr/bin; exit 0
 RUN /opt/anaconda3/bin/pip3 install ipywidgets
-#RUN apt install nodejs>=12.0
 RUN R -e "IRkernel::installspec(user = FALSE)"
+#
+#
+#
+# Add and enable plugins
+RUN sudo ln -s /opt/anaconda3/pkgs/*/bin/* /bin; exit 0
+RUN sudo ln -s /opt/anaconda3/pkgs/*/lib/* /usr/lib; exit 0
+RUN /opt/anaconda3/bin/pip3 install jupyterlab_irods
+RUN jupyter serverextension enable --py jupyterlab_irods
+RUN /opt/anaconda3/bin/pip3 install jupyterlab_github
+RUN /opt/anaconda3/bin/pip3 install jupyterlab_git
+RUN /opt/anaconda3/bin/pip3 install jlab-enhanced-cell-toolbar
+RUN jupyter labextension install ijab
+RUN jupyter serverextension enable --sys-prefix jupyterlab_github
 #
 #
 #
@@ -116,9 +127,11 @@ COPY ./jupyter_notebook_config.json /opt/anaconda3/etc/jupyter/jupyter_notebook_
 COPY ./jupyter_notebook_config.py /home/gene/.jupyter/jupyter_notebook_config.py
 #COPY ./.bashrc /home/gene/.bashrc
 RUN chown -R gene:gene /home/gene/.jupyter
-#RUN chmod -R 777 /home/jovyan
+RUN mkdir -p /home/gene/.irods
+RUN chown -R gene:gene /home/gene/.irods
 RUN chown gene:gene /home/gene/.bashrc
 USER gene
+EXPOSE 8888
 #
 #
 # Define entry point and startup commands
