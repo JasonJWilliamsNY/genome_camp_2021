@@ -130,6 +130,8 @@ RUN chown -R gene:gene /home/gene/.jupyter
 RUN mkdir -p /home/gene/.irods
 RUN chown -R gene:gene /home/gene/.irods
 RUN chown gene:gene /home/gene/.bashrc
+RUN chown -R gene:gene /opt
+
 USER gene
 EXPOSE 8888
 #
